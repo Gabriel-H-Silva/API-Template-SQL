@@ -20,29 +20,29 @@ namespace ManagerIO.Controllers
 
         [HttpPost]
         [Route("login")]
-        public IActionResult Signin([FromBody] UsersDM user)
+        public async Task<IActionResult> Signin([FromBody] UsersDM user)
         {
             if(user == null) return BadRequest("Invalid client request");
-            var token = _loginBusiness.ValidateCredentials(user);
+            var token = await _loginBusiness.ValidateCredentials(user);
             if (token == null) return Unauthorized();
             return Ok(token);
         }
         [HttpPost]
         [Route("refresh")]
-        public IActionResult Refresh([FromBody] TokenDM TokenDM)
+        public async Task<IActionResult> Refresh([FromBody] TokenDM TokenDM)
         {
             if (TokenDM is null) return BadRequest("Invalid client request");
-            var token = _loginBusiness.ValidateCredentials(TokenDM);
+            var token = await _loginBusiness.ValidateCredentials(TokenDM);
             if (token == null) return BadRequest("Invalid client request");
             return Ok(token);
         }
         [HttpGet]
         [Route("revoke")]
         [Authorize("Bearer")]
-        public IActionResult Revoke()
+        public async Task<IActionResult> Revoke()
         {
             var username = User.Identity.Name;
-            var result = _loginBusiness.RevokeToken(username);
+            var result = await _loginBusiness.RevokeToken(username);
 
             if (!result) return BadRequest("Invalid client request");
             return NoContent();

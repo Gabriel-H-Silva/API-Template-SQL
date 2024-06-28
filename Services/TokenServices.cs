@@ -16,7 +16,7 @@ namespace ManagerIO.Services
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(IEnumerable<Claim> claims)
+        public async Task<string> GenerateAccessToken(IEnumerable<Claim> claims)
         {
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.Secret));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
@@ -33,7 +33,7 @@ namespace ManagerIO.Services
             return tokenString;
         }
 
-        public string GenerateRefreshToken()
+        public async Task<string> GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
@@ -43,7 +43,7 @@ namespace ManagerIO.Services
             }
         }
 
-        public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        public async Task<ClaimsPrincipal> GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {

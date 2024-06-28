@@ -90,7 +90,7 @@ builder.Services.AddApiVersioning();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUsersBusiness, UsersBusiness>();
 builder.Services.AddScoped<ILoginBusiness, LoginBusiness>();
-builder.Services.AddScoped<UsersRepository>();
+builder.Services.AddScoped<IUsersRepository>();
 
 builder.Services.AddTransient<ITokenServices, TokenServices>();
 

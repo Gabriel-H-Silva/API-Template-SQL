@@ -4,9 +4,8 @@ namespace ManagerIO.Business.Interfaces
 {
     public interface ILoginBusiness
     {
-        TokenDM ValidateCredentials(UsersDM user);
-
-        TokenDM ValidateCredentials(TokenDM token);
-        public bool RevokeToken(string userName);
+        Task<TokenDM> ValidateCredentials(UsersDM user);
+        Task<TokenDM> ValidateCredentials(TokenDM token);
+        Task<bool>  RevokeToken(string userName);
     }
 }

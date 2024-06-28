@@ -20,10 +20,10 @@ namespace ManagerApi.Model
         public string password { get; set; }
 
         [Column("refresh_token")]
-        public string RefreshToken { get; set; }
+        public string? refreshToken { get; set; }
 
         [Column("refresh_token_expiry_time")]
-        public DateTime RefreshTokenExpiryTime { get; set; }
+        public DateTime refreshTokenExpiryTime { get; set; }
 
     }
 }

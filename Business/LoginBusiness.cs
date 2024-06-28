@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ManagerApi.Model;
 using ManagerApi.Model.DM;
+using ManagerApi.Repository.Interfaces;
 
 namespace ManagerIO.Business
 {
@@ -14,9 +15,9 @@ namespace ManagerIO.Business
         private const string DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
         private TokenConfiguration _configuration;
 
-        private UsersRepository _repository;
+        private IUsersRepository _repository;
 
-        public LoginBusiness(TokenConfiguration configuration, UsersRepository repository, ITokenServices tokenServices)
+        public LoginBusiness(TokenConfiguration configuration, IUsersRepository repository, ITokenServices tokenServices)
         {
             _configuration = configuration;
             _repository = repository;
@@ -24,13 +25,13 @@ namespace ManagerIO.Business
         }
 
         private readonly ITokenServices _tokenServices;
-        public TokenDM ValidateCredentials(UsersDM userCredentials)
+        public async Task<TokenDM> ValidateCredentials(UsersDM userCredentials)
         {
             Users loginData = new Users();
             loginData.name = userCredentials.name;
             loginData.password = userCredentials.password;
 
-            var user = _repository.ValidadeCredentials(loginData);
+            var user = await _repository.ValidadeCredentials(loginData);
             if (user == null) return null;
 
             var claims = new List<Claim>
@@ -39,65 +40,67 @@ namespace ManagerIO.Business
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.name)
             };
 
-            var accessToken = _tokenServices.GenerateAccessToken(claims);
-            var refreshToken = _tokenServices.GenerateRefreshToken();
+            var accessToken = await _tokenServices.GenerateAccessToken(claims);
+            var refreshToken = await _tokenServices.GenerateRefreshToken();
 
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_configuration.DaysToExpiry);
+            user.refreshToken = refreshToken;
+            user.refreshTokenExpiryTime = DateTime.Now.AddDays(_configuration.DaysToExpiry);
 
-            _repository.RefreshUserInfo(user);
+            await _repository.RefreshUserInfo(user);
 
             DateTime createDate = DateTime.Now;
             DateTime expirationDate = createDate.AddMinutes(_configuration.Minutes);
 
-            return new TokenDM(
+            return new TokenDM
+            (
                 true,
                 createDate.ToString(DATE_FORMAT),
                 expirationDate.ToString(DATE_FORMAT),
                 accessToken,
                 refreshToken
-                );
+            );
         }
 
-        public TokenDM ValidateCredentials(TokenDM token)
+        public async Task<TokenDM> ValidateCredentials(TokenDM token)
         {
             var accessToken = token.AccessToken;
             var refreshToken = token.RefreshToken;
 
-            var principal = _tokenServices.GetPrincipalFromExpiredToken(accessToken);
+            var principal = await _tokenServices.GetPrincipalFromExpiredToken(accessToken);
 
             var username = principal.Identity.Name;
 
-            var user = _repository.ValidadeCredentials(username);
+            var user = await _repository.ValidadeCredentials(username);
 
             if (
                 user == null ||
-                user.RefreshToken != refreshToken ||
-                user.RefreshTokenExpiryTime <= DateTime.Now
+                user.refreshToken != refreshToken ||
+                user.refreshTokenExpiryTime <= DateTime.Now
             ) return null;
 
-            accessToken = _tokenServices.GenerateAccessToken(principal.Claims);
-            refreshToken = _tokenServices.GenerateRefreshToken();
+            accessToken = await _tokenServices.GenerateAccessToken(principal.Claims);
+            refreshToken = await _tokenServices.GenerateRefreshToken();
 
-            user.RefreshToken = refreshToken;
+            user.refreshToken = refreshToken;
 
-            _repository.RefreshUserInfo(user);
+            await _repository.RefreshUserInfo(user);
 
             DateTime createDate = DateTime.Now;
             DateTime expirationDate = createDate.AddMinutes(_configuration.Minutes);
 
-            return new TokenDM(
+            return new TokenDM
+            (
                 true,
                 createDate.ToString(DATE_FORMAT),
                 expirationDate.ToString(DATE_FORMAT),
                 accessToken,
                 refreshToken
-                );
+            );
         }
 
-        public bool RevokeToken(string userName)
+        public async Task<bool> RevokeToken(string userName)
         {
-            return _repository.RevokeToken(userName);
+            return await _repository.RevokeToken(userName);
         }
     }
 }

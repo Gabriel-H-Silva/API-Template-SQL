@@ -7,7 +7,7 @@ namespace ManagerIO.Business
 {
     public class UsersBusiness : IUsersBusiness
     {
-        UsersRepository repository;
+        IUsersRepository repository;
         public Users Create(Users person)
         {
             throw new NotImplementedException();
